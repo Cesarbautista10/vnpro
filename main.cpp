@@ -354,9 +354,12 @@ int main(int argc, char const *argv[])
     }
     
 	/* check bootloader version */
-	if ( ((u8Buff[19] != 0x02) || (u8Buff[20] != 0x03) || (u8Buff[21] != 0x01)) && ((u8Buff[19] != 0x02) || (u8Buff[20] != 0x04) || (u8Buff[21] != 0x00)) ){
-		printf("Not support, Bootloader version.\n");
-		return 1;
+	{
+		uint16_t id_3digit = u8Buff[19]*100 + u8Buff[20]*10 + u8Buff[21];
+		if ( id_3digit>=231 && id_3digit<250 ){
+			printf("Not support, Bootloader version.\n");
+			return 1;
+		}
 	}
 	/* Calc XOR Mask */
 
