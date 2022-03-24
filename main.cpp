@@ -356,7 +356,7 @@ int main(int argc, char const *argv[])
 	/* check bootloader version */
 	{
 		uint16_t id_3digit = u8Buff[19]*100 + u8Buff[20]*10 + u8Buff[21];
-		if ( id_3digit>=231 && id_3digit<250 ){
+		if ( id_3digit<231 || id_3digit>250 ){
 			printf("Not support, Bootloader version.\n");
 			return 1;
 		}
