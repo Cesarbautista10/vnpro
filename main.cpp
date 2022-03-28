@@ -516,11 +516,11 @@ int main(int argc, char const *argv[])
 
 	/* Erase or unknow */
     if (u8FamilyID == 0x12) {
-        //each unit in erase will do 1024 bytes
+        //each unit in erase will do 1024 bytes for CH549
         uint8_t eraseValue = (ktBin.u32Size + 1023) / 1024;
         if (eraseValue<8) eraseValue=8;
         u8EraseCmd[3] = eraseValue;
-    }
+    }//maybe necessary to check for CH552 2.5.0?
     if (usingSerial){
         if (!WriteSerial(&serialFd, u8EraseCmd, u8EraseCmd[1] + 3)) {
             printf("Send Erase: Fail\n");
