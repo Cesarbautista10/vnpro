@@ -176,11 +176,12 @@ int main(int argc, char const *argv[])
 	KT_ProgressBar ktProg;
 	uint8_t chipType;
     bool usingSerial;
+    int usbRertySeconds = 0;
 
 	printf("------------------------------------------------------------------\n");
 	printf("CH55x Programmer by VNPro\n");
 	printf("------------------------------------------------------------------\n");
-	if (argc != 2 && argc != 3) {
+	if (argc < 2) {
 		printf("usage: vnproch55x flash_file.bin\n");
 		printf("------------------------------------------------------------------\n");
         return 1;
@@ -201,6 +202,12 @@ int main(int argc, char const *argv[])
             if ( ((char*)argv[i])[1] == 's' ){
                 usingSerial = true;
                 serialName = &(((char*)argv[i])[2]);
+            }
+            if ( ((char*)argv[i])[1] == 'r' ){
+                int ret = sscanf( &(((char*)argv[i])[2]), "%d", &usbRertySeconds );
+                if (ret != 1){
+                    usbRertySeconds = 0;
+                }
             }
         }
     }
@@ -230,42 +237,73 @@ int main(int argc, char const *argv[])
         
         serial_drain(&serialFd,0);
     }else{
-		uint8_t libusbNeeded = 1;
-#if defined(WIN32NATIVE) || defined(_WIN32_WINNT) ||defined(__WIN32__)
-		//try CH375 first
-		{
-			unsigned long ch375Version = CH375GetVersion();
-			printf("ch375Version %d\n",ch375Version);
-			unsigned long usbId = CH375GetUsbID(0);
-			printf("CH375GetUsbID %x\n",usbId);
-			if (usbId == 0x55e04348UL){
-				if ( (unsigned int)(CH375OpenDevice(0)) > 0){
-					printf("CH375 open OK\n");
-					libusbNeeded = 0;
-					
-					fflush(stdout);
-				}else{
-					printf("CH375 open failed\n");
-					return 1;
-				}
-			}
-		}
-#endif	
-		if (libusbNeeded){
-			h = libusb_open_device_with_vid_pid(NULL, 0x4348, 0x55e0);
-			
-			if (h == NULL) {
-				printf("Found no CH55x USB\n");
-				return 1;
-			}
-			
-			struct libusb_device_descriptor desc;
-			if (libusb_get_device_descriptor(libusb_get_device(h), &desc) >= 0 ) {
-				printf("DeviceVersion of CH55x: %d.%02d \n", ((desc.bcdDevice>>12)&0x0F)*10+((desc.bcdDevice>>8)&0x0F),((desc.bcdDevice>>4)&0x0F)*10+((desc.bcdDevice>>0)&0x0F));
-			}
+        bool ch375InfoPrinted = false;
+        bool usbOpened = false;
+        uint32_t triedMS = 0;
+        uint32_t toTryMS = usbRertySeconds * 1000;
+        
+        while (triedMS <= toTryMS){
+            
+            
 
-			libusb_claim_interface(h, 0);
-		}
+            uint8_t libusbNeeded = 1;
+    #if defined(WIN32NATIVE) || defined(_WIN32_WINNT) ||defined(__WIN32__)
+            //try CH375 first
+            {
+                unsigned long ch375Version = CH375GetVersion();
+                if (!ch375InfoPrinted){
+                    printf("ch375Version %d\n",ch375Version);
+                }
+                unsigned long usbId = CH375GetUsbID(0);
+                if (!ch375InfoPrinted){
+                    printf("CH375GetUsbID %x\n",usbId);
+                }
+                ch375InfoPrinted = true;
+                if (usbId == 0x55e04348UL){
+                    if ( (unsigned int)(CH375OpenDevice(0)) > 0){
+                        printf("CH375 open OK\n");
+                        libusbNeeded = 0;
+                        
+                        fflush(stdout);
+                        usbOpened = true;
+                    }else{
+                        printf("CH375 open failed\n");
+                    }
+                }
+            }
+    #endif
+            if (libusbNeeded){
+                h = libusb_open_device_with_vid_pid(NULL, 0x4348, 0x55e0);
+                
+                if (h == NULL) {
+                    //printf("Found no CH55x USB\n");
+                }else{
+                    struct libusb_device_descriptor desc;
+                    if (libusb_get_device_descriptor(libusb_get_device(h), &desc) >= 0 ) {
+                        printf("DeviceVersion of CH55x: %d.%02d \n", ((desc.bcdDevice>>12)&0x0F)*10+((desc.bcdDevice>>8)&0x0F),((desc.bcdDevice>>4)&0x0F)*10+((desc.bcdDevice>>0)&0x0F));
+                    }
+                    
+                    libusb_claim_interface(h, 0);
+                    usbOpened = true;
+                }
+            }
+            if (usbOpened){
+                break;
+            }else{
+                triedMS += 100;
+                if (triedMS <= toTryMS){
+                    usleep(100*1000);
+                    printf("No CH55x USB Found, retry...\n");
+                }else{
+                    printf("Found no CH55x USB\n");
+                    if (toTryMS > 0){
+                        printf("Time limit reached, exit process\n");
+                    }
+                    return 1;
+                }
+            }
+            
+        }
     }
 	
 	/* Detect MCU */
