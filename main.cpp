@@ -13,6 +13,8 @@ uint8_t usingCH375Driver = 0;
 HINSTANCE hDLL;
 #endif
 
+#define DATE_MESSAGE "Updated on: 2022/10/08\n"
+
 KT_BinIO ktFlash;
 
 uint8_t u8Buff[64];
@@ -179,7 +181,8 @@ int main(int argc, char const *argv[])
     int usbRertySeconds = 0;
 
 	printf("------------------------------------------------------------------\n");
-	printf("CH55x Programmer by VNPro\n");
+	printf("CH55x Programmer by Deqing\n");
+    printf(DATE_MESSAGE);
 	printf("------------------------------------------------------------------\n");
 	if (argc < 2) {
 		printf("usage: vnproch55x flash_file.bin\n");
