@@ -558,7 +558,19 @@ int main(int argc, char const *argv[])
         uint8_t eraseValue = (ktBin.u32Size + 1023) / 1024;
         if (eraseValue<8) eraseValue=8;
         u8EraseCmd[3] = eraseValue;
-    }//maybe necessary to check for CH552 2.5.0?
+    }else if (u8FamilyID == 0x11) {
+        if ( (u8DeviceID == 0x51) || (u8DeviceID == 0x52) || (u8DeviceID == 0x54) ){
+            //by reading CH552 bootloader bootloaderV25.a51 from https://www.mikrocontroller.net/topic/462538?page=4#7196924
+            //any value >= 8 will be overwritten to 8, a value smaller than 8 will skip the erase and cause write error.
+            u8EraseCmd[3] = 0x08;
+        }else if ( (u8DeviceID == 0x58) || (u8DeviceID == 0x59) ){
+            //each unit in erase will do 1024 bytes for CH559? The offical tool just did 0x3C to erase all 60K code memory
+            uint8_t eraseValue = (ktBin.u32Size + 1023) / 1024;
+            if (eraseValue<8) eraseValue=8;
+            u8EraseCmd[3] = eraseValue;
+        }
+    }
+    
     if (usingSerial){
         if (!WriteSerial(&serialFd, u8EraseCmd, u8EraseCmd[1] + 3)) {
             printf("Send Erase: Fail\n");
