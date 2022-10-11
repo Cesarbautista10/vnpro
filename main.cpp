@@ -39,25 +39,26 @@ uint8_t u8IdRespond = 30;
 uint8_t u8DeviceID = 0;
 uint8_t u8FamilyID = 0;
 
-/* Enable ISP */
-uint8_t u8InitCmd[64] = {
+/* Write boot options. On ch552, write 8 bytes from u8WriteBootOptionsCmd[5] to ROM_CFG_ADDR-8 */
+/* ch552 only check ROM_CFG_ADDR-4 (written 0x03), bit 1, Set use P3.6 as boot. Clear P1.5. bit 0 related to timeout */
+uint8_t u8WriteBootOptionsCmd[64] = {
 	0xA8, 0x0E, 0x00, 0x07, 0x00, 0xFF, 0xFF, 0xFF,
 	0xFF, 0x03, 0x00, 0x00, 0x00, 0xFF, 0x52, 0x00,
 	0x00
 };
-uint8_t u8InitRespond = 6;
+uint8_t u8WriteBootOptionsRespond = 6;
 
-/* Set Flash Address, mask protected*/
-uint8_t u8AddessCmd[64] = {
+/* New bootkey*/
+uint8_t u8NewBootkeyCmd[64] = {
 	0xA3, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00
 };
-uint8_t u8AddessRespond = 6;
+uint8_t u8NewBootkeyRespond = 6;
 
-/* Erase ??? , the 4th byte need to be 9 on CH549*/
+/* Erase Sectors of 1024 bytes*/
 uint8_t u8EraseCmd[64] = {
 	0xA4, 0x01, 0x00, 0x08
 };
@@ -423,24 +424,24 @@ int main(int argc, char const *argv[])
 
 	/* init or erase ??? */
     if (usingSerial){
-        if (!WriteSerial(&serialFd, u8InitCmd, u8InitCmd[1] + 3)) {
+        if (!WriteSerial(&serialFd, u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
             printf("Send Init: Fail\n");
             serial_close(&serialFd);
             return 1;
         }
         
-        if (!ReadSerial(&serialFd, u8Buff, u8InitRespond)) {
+        if (!ReadSerial(&serialFd, u8Buff, u8WriteBootOptionsRespond)) {
             printf("Read Init: Fail\n");
             serial_close(&serialFd);
             return 1;
         }
     }else{
-        if (!Write(u8InitCmd, u8InitCmd[1] + 3)) {
+        if (!Write(u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
             printf("Send Init: Fail\n");
             return 1;
         }
         
-        if (!Read(u8Buff, u8InitRespond)) {
+        if (!Read(u8Buff, u8WriteBootOptionsRespond)) {
             printf("Read Init: Fail\n");
             return 1;
         }
@@ -532,24 +533,24 @@ int main(int argc, char const *argv[])
 
 	/* Set Flash Address to 0 */
     if (usingSerial){
-        if (!WriteSerial(&serialFd, u8AddessCmd, u8AddessCmd[1] + 3)) {
+        if (!WriteSerial(&serialFd, u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
             printf("Send Address: Fail\n");
             serial_close(&serialFd);
             return 1;
         }
         
-        if (!ReadSerial(&serialFd, u8Buff, u8AddessRespond)) {
+        if (!ReadSerial(&serialFd, u8Buff, u8NewBootkeyRespond)) {
             printf("Read Address: Fail\n");
             serial_close(&serialFd);
             return 1;
         }
     }else{
-        if (!Write(u8AddessCmd, u8AddessCmd[1] + 3)) {
+        if (!Write(u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
             printf("Send Address: Fail\n");
             return 1;
         }
         
-        if (!Read(u8Buff, u8AddessRespond)) {
+        if (!Read(u8Buff, u8NewBootkeyRespond)) {
             printf("Read Address: Fail\n");
             return 1;
         }
@@ -691,24 +692,24 @@ int main(int argc, char const *argv[])
 	
 	/* Set Flash Address to 0 */
     if (usingSerial){
-        if (!WriteSerial(&serialFd, u8AddessCmd, u8AddessCmd[1] + 3)) {
+        if (!WriteSerial(&serialFd, u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
             printf("Send Address: Fail\n");
             serial_close(&serialFd);
             return 1;
         }
         
-        if (!ReadSerial(&serialFd, u8Buff, u8AddessRespond)) {
+        if (!ReadSerial(&serialFd, u8Buff, u8NewBootkeyRespond)) {
             printf("Read Address: Fail\n");
             serial_close(&serialFd);
             return 1;
         }
     }else{
-        if (!Write(u8AddessCmd, u8AddessCmd[1] + 3)) {
+        if (!Write(u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
             printf("Send Address: Fail\n");
             return 1;
         }
         
-        if (!Read(u8Buff, u8AddessRespond)) {
+        if (!Read(u8Buff, u8NewBootkeyRespond)) {
             printf("Read Address: Fail\n");
             return 1;
         }
