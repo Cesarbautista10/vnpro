@@ -13,7 +13,7 @@ uint8_t usingCH375Driver = 0;
 HINSTANCE hDLL;
 #endif
 
-#define DATE_MESSAGE "Updated on: 2022/10/08\n"
+#define DATE_MESSAGE "Updated on: 2023/04/22\n"
 
 KT_BinIO ktFlash;
 
@@ -195,10 +195,11 @@ int main(int argc, char const *argv[])
     usingSerial = false;
     char *serialName = NULL;
     union filedescriptor serialFd;
+    char *configBytesString = NULL;
 
     // use getopt to parse arguments, mac os doesn't support -
     int opt;
-    while ((opt = getopt(argc, (char *const *)argv, "s:r:"))) {
+    while ((opt = getopt(argc, (char *const *)argv, "s:r:c:"))) {
         if (opt == -1)
             break;
         switch (opt) {
@@ -211,10 +212,9 @@ int main(int argc, char const *argv[])
                 usbRertySeconds = atoi(optarg);
                 printf("usbRertySeconds %d\n",usbRertySeconds);
                 break;
-            default: /* '?' */
-                fprintf(stderr, "Usage: %s [-s serial] [-r retry_seconds] flash_file.bin\n",
-                        argv[0]);
-                //#return 1;
+            case 'c':
+                configBytesString = optarg;
+                break;
         }
     }
 
@@ -434,32 +434,6 @@ int main(int argc, char const *argv[])
 	}
 	printf("\n");
 
-	/* init or erase ??? */
-    if (usingSerial){
-        if (!WriteSerial(&serialFd, u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
-            printf("Send Init: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-        
-        if (!ReadSerial(&serialFd, u8Buff, u8WriteBootOptionsRespond)) {
-            printf("Read Init: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-    }else{
-        if (!Write(u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
-            printf("Send Init: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8WriteBootOptionsRespond)) {
-            printf("Read Init: Fail\n");
-            return 1;
-        }
-    }
-	
-
 	/* Bootloader and Chip ID */
     if (usingSerial){
         if (!WriteSerial(&serialFd, u8IdCmd, u8IdCmd[1] + 3)) {
@@ -485,8 +459,36 @@ int main(int argc, char const *argv[])
         }
     }
     
-    /* get configuration */
-    if (u8FamilyID == 0x12) {
+    /* set configuration */
+    if (u8FamilyID == 0x11) {
+        if (configBytesString==NULL || (strcmp(configBytesString, "KEEP")!=0)){
+            if (usingSerial){
+                if (!WriteSerial(&serialFd, u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
+                    printf("Send Init: Fail\n");
+                    serial_close(&serialFd);
+                    return 1;
+                }
+                
+                if (!ReadSerial(&serialFd, u8Buff, u8WriteBootOptionsRespond)) {
+                    printf("Read Init: Fail\n");
+                    serial_close(&serialFd);
+                    return 1;
+                }
+            }else{
+                if (!Write(u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
+                    printf("Send Init: Fail\n");
+                    return 1;
+                }
+                
+                if (!Read(u8Buff, u8WriteBootOptionsRespond)) {
+                    printf("Read Init: Fail\n");
+                    return 1;
+                }
+            }
+        }else{
+            printf("Skip boot config write.\n");
+        }
+    }else if (u8FamilyID == 0x12) {
         /* Read Boot Option */
         uint8_t u8ReadOptionCmd[64] = {
             0xA7, 0x02, 0x00, 0x1F, 0x00
@@ -515,15 +517,18 @@ int main(int argc, char const *argv[])
             printf("%02X ",u8Buff[i]);
         }
         printf("\n");*/
-        
-        if (!Write(u8WriteOptionCmd, u8WriteOptionCmd[1] + 3)) {
-            printf("Send Write Option: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8WriteOptionRespond)) {
-            printf("Read Write Option: Fail\n");
-            return 1;
+        if (configBytesString==NULL || (strcmp(configBytesString, "KEEP")!=0)){
+            if (!Write(u8WriteOptionCmd, u8WriteOptionCmd[1] + 3)) {
+                printf("Send Write Option: Fail\n");
+                return 1;
+            }
+            
+            if (!Read(u8Buff, u8WriteOptionRespond)) {
+                printf("Read Write Option: Fail\n");
+                return 1;
+            }
+        }else{
+            printf("Skip boot config write.\n");
         }
         
         if (!Write(u8ReadOptionCmd, u8ReadOptionCmd[1] + 3)) {
