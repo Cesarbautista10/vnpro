@@ -190,31 +190,43 @@ int main(int argc, char const *argv[])
 		printf("------------------------------------------------------------------\n");
         return 1;
 	}
-    /* load flash file */
-	ktBin.u32Size = 63 * 1024;	//make it super big for initialization, big enough to hold CH559 size
-	ktBin.InitBuffer();
-    
+
     char *fileName = NULL;
     usingSerial = false;
     char *serialName = NULL;
     union filedescriptor serialFd;
-    
-    for (int i=1;i<argc;i++){
-        if ( ((char*)argv[i])[0] != '-' ){
-            fileName = (char*)argv[i];
-        }else{
-            if ( ((char*)argv[i])[1] == 's' ){
+
+    // use getopt to parse arguments, mac os doesn't support -
+    int opt;
+    while ((opt = getopt(argc, (char *const *)argv, "s:r:"))) {
+        if (opt == -1)
+            break;
+        switch (opt) {
+            case 's':
                 usingSerial = true;
-                serialName = &(((char*)argv[i])[2]);
-            }
-            if ( ((char*)argv[i])[1] == 'r' ){
-                int ret = sscanf( &(((char*)argv[i])[2]), "%d", &usbRertySeconds );
-                if (ret != 1){
-                    usbRertySeconds = 0;
-                }
-            }
+                serialName = optarg;
+                printf("using serial port %s\n",serialName);
+                break;
+            case 'r':
+                usbRertySeconds = atoi(optarg);
+                printf("usbRertySeconds %d\n",usbRertySeconds);
+                break;
+            default: /* '?' */
+                fprintf(stderr, "Usage: %s [-s serial] [-r retry_seconds] flash_file.bin\n",
+                        argv[0]);
+                //#return 1;
         }
     }
+
+    for (int index = optind; index < argc; index++){
+        if (fileName == NULL){
+            fileName = (char*)argv[index];
+        }
+    }
+
+    /* load flash file */
+	ktBin.u32Size = 63 * 1024;	//make it super big for initialization, big enough to hold CH559 size
+	ktBin.InitBuffer();
     
 	if (!ktBin.Read(fileName)) {
 		printf("Read file: ERROR\n");
