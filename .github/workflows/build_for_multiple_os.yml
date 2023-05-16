@@ -30,12 +30,8 @@ jobs:
       run: |
         echo "need to build for arm"
         sudo apt-get install -y g++-aarch64-linux-gnu
-        echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-        echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-        echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
-        sudo dpkg --add-architecture arm64
-        sudo apt update -o APT::Architecture="arm64"
-        sudo apt-get install -y libusb-1.0-0-dev:arm64
+        unzip -o libusb_arm64.zip
+        cp usr_lib_aarch64-linux-gnu/* /usr/lib/aarch64-linux-gnu/
         make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
         mkdir linux_arm64
         cp vnproch55x linux_arm64/
