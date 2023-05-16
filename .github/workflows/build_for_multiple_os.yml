@@ -30,6 +30,7 @@ jobs:
       run: |
         echo "need to build for arm"
         echo "aaa" > test.txt
+        aarch64-linux-gnu-g++
     - if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
