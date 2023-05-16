@@ -31,7 +31,7 @@ jobs:
         echo "need to build for arm"
         sudo apt-get install -y g++-aarch64-linux-gnu
         unzip -o libusb_arm64.zip
-        cp usr_lib_aarch64-linux-gnu/* /usr/lib/aarch64-linux-gnu/
+        sudo cp usr_lib_aarch64-linux-gnu/* /usr/lib/aarch64-linux-gnu/
         make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
         mkdir linux_arm64
         cp vnproch55x linux_arm64/
