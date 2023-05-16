@@ -17,4 +17,8 @@ jobs:
       run: sudo apt-get install -y libusb-1.0-0-dev
     - name: make
       run: make
-
+    - name: move and zip file
+      run: |
+        mkdir linux
+        cp vnproch55x linux/
+        zip linux.zip linux
