@@ -18,11 +18,13 @@ jobs:
       run: sudo apt-get install -y libusb-1.0-0-dev
     - name: make
       run: make
-    - name: move and zip file
+    - if: runner.os == 'Linux'
+      name: move and zip file
       run: |
         mkdir linux
         cp vnproch55x linux/
-    - uses: actions/upload-artifact@v3
+    - if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v3
       with:
         name: linux_build
         path: linux        
