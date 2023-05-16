@@ -26,3 +26,12 @@ jobs:
       with:
         name: linux_build
         path: linux        
+    - if: runner.os == 'Linux'
+      run: |
+        echo "need to build for arm"
+        echo "aaa" > test.txt
+    - if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux_aarch_build
+        path: test.txt        
