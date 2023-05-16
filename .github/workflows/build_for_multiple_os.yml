@@ -34,12 +34,13 @@ jobs:
         echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
         echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
         sudo dpkg --add-architecture arm64
-        sudo apt-get update
+        sudo apt update -o APT::Architecture="arm64" ; true
         sudo apt-get install -y libusb-1.0-0-dev:arm64
         make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
-        echo "aaa" > test.txt
+        mkdir linux_arm64
+        cp vnproch55x linux_arm64/
     - if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: linux_aarch_build
-        path: test.txt        
+        name: linux_arm64_build
+        path: linux_arm64        
