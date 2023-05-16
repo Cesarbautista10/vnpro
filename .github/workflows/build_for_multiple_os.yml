@@ -34,7 +34,7 @@ jobs:
         echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
         echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list
         sudo dpkg --add-architecture arm64
-        sudo apt update -o APT::Architecture="arm64" ; true
+        sudo apt update -o APT::Architecture="arm64"
         sudo apt-get install -y libusb-1.0-0-dev:arm64
         make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
         mkdir linux_arm64
