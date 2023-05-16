@@ -29,6 +29,9 @@ jobs:
     - if: runner.os == 'Linux'
       run: |
         echo "need to build for arm"
+        sudo apt-get install -y g++-aarch64-linux-gnu
+        sudo apt-get install -y libusb-1.0-0-dev:arm64
+        make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
         echo "aaa" > test.txt
         aarch64-linux-gnu-g++
     - if: runner.os == 'Linux'
