@@ -21,8 +21,7 @@ jobs:
       run: |
         mkdir linux
         cp vnproch55x linux/
-        zip linux.zip linux
-        ls -al
+        zip -r linux.zip linux
     - uses: actions/upload-artifact@v3
       with:
         name: linux_build
