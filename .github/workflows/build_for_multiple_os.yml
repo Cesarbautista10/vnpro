@@ -10,7 +10,7 @@ jobs:
   build_os_matrix:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-20.04, windows-2019]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
@@ -43,3 +43,14 @@ jobs:
       with:
         name: linux_arm64_build
         path: linux_arm64        
+    
+    - if: runner.os == 'Windows'
+      name: move and zip file
+      run: |
+        mkdir win
+        cp vnproch55x.exe win/
+    - if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v3
+      with:
+        name: win_build
+        path: win        
