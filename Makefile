@@ -25,7 +25,7 @@ $(TARGET): $(OBJS)
 	$(CPP) $(OBJS) $(LIBS) -o $@ 
 
 %.o:%.cpp
-	$(CPP) -c $< -o $@
+	$(CPP) $(INCLUDE) -c $< -o $@
 all:
 	$(TARGET)
 install: $(TARGET)
