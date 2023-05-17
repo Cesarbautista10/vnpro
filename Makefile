@@ -33,5 +33,5 @@ install: $(TARGET)
 	cp 90-ch551-bl.rules /etc/udev/rules.d
 	udevadm control --reload-rules
 clean:
-	rm $(TARGET) *.o
+	rm -f $(TARGET) *.o
 .PHONY: all clean install
