@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build for Multiple target
 
 on:
   push:
@@ -7,28 +7,28 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build_os_matrix:
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, windows-2019]
-    runs-on: ${{ matrix.os }}
+  build:
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
     - name: Install libusb
       run: sudo apt-get install -y libusb-1.0-0-dev
     - name: make
       run: make
-    - if: runner.os == 'Linux'
-      name: move and zip file
+    - name: move and zip file
       run: |
         mkdir linux
         cp vnproch55x linux/
-    - if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3
       with:
         name: linux_build
         path: linux        
-    - if: runner.os == 'Linux'
+        
+    - name: test win build
+      run: |
+        i686-w64-mingw32-g++
+
+    - name: build with aarch64-linux-gnu
       run: |
         echo "need to build for arm"
         sudo apt-get install -y g++-aarch64-linux-gnu
@@ -38,19 +38,9 @@ jobs:
         make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
         mkdir linux_arm64
         cp vnproch55x linux_arm64/
-    - if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3
       with:
         name: linux_arm64_build
         path: linux_arm64        
     
-    - if: runner.os == 'Windows'
-      name: move and zip file
-      run: |
-        mkdir win
-        cp vnproch55x.exe win/
-    - if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v3
-      with:
-        name: win_build
-        path: win        
+
