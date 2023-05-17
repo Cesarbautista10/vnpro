@@ -29,7 +29,7 @@ jobs:
         echo "need to build for windows"
         sudo apt-get install -y g++-mingw-w64-i686
         unzip -o libusb_mingw32.zip
-        sudo cp usr_i686-w64-mingw32_lib/* usr/i686-w64-mingw32/lib/
+        sudo cp usr_i686-w64-mingw32_lib/* /usr/i686-w64-mingw32/lib/
         make clean
         make OS_NAME=cygwin host=i686-w64-mingw32 INCLUDE=-I.
         mkdir win
