@@ -63,7 +63,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install libusb
-      run: sudo apt-get install -y libusb-1.0-0-dev
+      run: echo "skip for now"
     - name: make
       run: make
     - name: compress file to keep permissions 
