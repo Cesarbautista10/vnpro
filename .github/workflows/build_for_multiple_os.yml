@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  linux_build:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
@@ -56,6 +56,23 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: linux_arm64_build
-        path: linux_arm64.tar        
-    
+        path: linux_arm64.tar    
+        
+  mac_build:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install libusb
+      run: sudo apt-get install -y libusb-1.0-0-dev
+    - name: make
+      run: make
+    - name: compress file to keep permissions 
+      run: |
+        mkdir mac
+        cp vnproch55x mac/
+        tar -cvf mac.tar mac
+    - uses: actions/upload-artifact@v3
+      with:
+        name: mac_build
+        path: mac.tar        
 
