@@ -65,7 +65,13 @@ jobs:
     - name: Install libusb
       run: echo "skip for now"
     - name: make
-      run: make
+      run: |
+        tar -xvf libusb_mac.tgz
+        mkdir -p /usr/local/Cellar/libusb/1.0.23/lib
+        mkdir -p /usr/local/Cellar/libusb-compat/0.1.5_1/lib
+        cp libusb-1.0.a /usr/local/Cellar/libusb/1.0.23/lib/
+        cp libusb.a /usr/local/Cellar/libusb-compat/0.1.5_1/lib/
+        make
     - name: compress file to keep permissions 
       run: |
         mkdir mac
