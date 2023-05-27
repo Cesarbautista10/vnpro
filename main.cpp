@@ -13,7 +13,7 @@ uint8_t usingCH375Driver = 0;
 HINSTANCE hDLL;
 #endif
 
-#define DATE_MESSAGE "Updated on: 2023/04/22\n"
+#define DATE_MESSAGE "Updated on: 2023/05/27\n"
 
 KT_BinIO ktFlash;
 
@@ -291,18 +291,27 @@ int main(int argc, char const *argv[])
             }
     #endif
             if (libusbNeeded){
-                usbHandle = libusb_open_device_with_vid_pid(NULL, 0x4348, 0x55e0);
-                
-                if (usbHandle == NULL) {
-                    //printf("Found no CH55x USB\n");
-                }else{
-                    struct libusb_device_descriptor desc;
-                    if (libusb_get_device_descriptor(libusb_get_device(usbHandle), &desc) >= 0 ) {
-                        printf("DeviceVersion of CH55x: %d.%02d \n", ((desc.bcdDevice>>12)&0x0F)*10+((desc.bcdDevice>>8)&0x0F),((desc.bcdDevice>>4)&0x0F)*10+((desc.bcdDevice>>0)&0x0F));
-                    }
+                for (int i=0;((i<3) && (usbHandle == NULL));i++){  //on my MBP 2014, 11.7.3, the first time libusb_claim_interface call will fail
+                    //printf("Libusb Device open attempt %d\n",i);
+                    usbHandle = libusb_open_device_with_vid_pid(NULL, 0x4348, 0x55e0);
                     
-                    libusb_claim_interface(usbHandle, 0);
-                    usbOpened = true;
+                    if (usbHandle == NULL) {
+                        //printf("Found no CH55x USB\n");
+                    }else{
+                        struct libusb_device_descriptor desc;
+                        if (libusb_get_device_descriptor(libusb_get_device(usbHandle), &desc) >= 0 ) {
+                            printf("DeviceVersion of CH55x: %d.%02d \n", ((desc.bcdDevice>>12)&0x0F)*10+((desc.bcdDevice>>8)&0x0F),((desc.bcdDevice>>4)&0x0F)*10+((desc.bcdDevice>>0)&0x0F));
+                        }
+                        
+                        int ret_claim = libusb_claim_interface(usbHandle, 0);
+                        if (ret_claim < 0) {
+                            printf("libusb_claim_interface error %d: %s\n", ret_claim, libusb_strerror((enum libusb_error)ret_claim));
+                            libusb_close(usbHandle);
+                            usbHandle = NULL;
+                        }else{
+                            usbOpened = true;
+                        }
+                    }
                 }
             }
             if (usbOpened){
