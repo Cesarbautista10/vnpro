@@ -178,22 +178,22 @@ uint32_t ReadSerial(union filedescriptor *fd, uint8_t *p8Buff, uint8_t u8Length)
 bool writeAndReadBootloader(uint8_t *writeBuf, uint8_t *readBuf, uint8_t writeLength, uint8_t readLength)
 {
     if (usingSerial){
-        if (!WriteSerial(&serialFd,writeBuf,writeLength)){
+        if ((writeBuf!=NULL) && (!WriteSerial(&serialFd,writeBuf,writeLength))){
             printf("Send Detect: Fail\n");
             serial_close(&serialFd);
             return false;
         }
-        if (!ReadSerial(&serialFd,readBuf,readLength)){
+        if ((readBuf!=NULL) && (!ReadSerial(&serialFd,readBuf,readLength))){
             printf("Read Detect: Fail\n");
             serial_close(&serialFd);
             return false;
         }
     }else{
-        if (!Write(writeBuf,writeLength)){
+        if ((writeBuf!=NULL) && (!Write(writeBuf,writeLength))){
             printf("Send Detect: Fail\n");
             return false;
         }
-        if (!Read(readBuf,readLength)){
+        if ((readBuf!=NULL) && (!Read(readBuf,readLength))){
             printf("Read Detect: Fail\n");
             return false;
         }
@@ -488,32 +488,13 @@ int main(int argc, char const *argv[])
         printf("\n");*/
     }
 
-	/* Set Flash Address to 0 */
-    if (usingSerial){
-        if (!WriteSerial(&serialFd, u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
-            printf("Send Address: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-        
-        if (!ReadSerial(&serialFd, u8Buff, u8NewBootkeyRespond)) {
-            printf("Read Address: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-    }else{
-        if (!Write(u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
-            printf("Send Address: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8NewBootkeyRespond)) {
-            printf("Read Address: Fail\n");
-            return 1;
-        }
+	/* New bootkey */
+    if (!writeAndReadBootloader(u8NewBootkeyCmd,u8Buff,u8NewBootkeyCmd[1] + 3,u8NewBootkeyRespond)){
+        printf("New bootkey: Fail\n");
+        return 1;
     }
 
-	/* Erase or unknow */
+	/* Erase */
     if (u8FamilyID == 0x12) {
         //each unit in erase will do 1024 bytes for CH549
         uint8_t eraseValue = (ktBin.u32Size + 1023) / 1024;
@@ -531,29 +512,10 @@ int main(int argc, char const *argv[])
             u8EraseCmd[3] = eraseValue;
         }
     }
-    
-    if (usingSerial){
-        if (!WriteSerial(&serialFd, u8EraseCmd, u8EraseCmd[1] + 3)) {
-            printf("Send Erase: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-        
-        if (!ReadSerial(&serialFd, u8Buff, u8EraseRespond)) {
-            printf("Read Erase: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-    }else{
-        if (!Write(u8EraseCmd, u8EraseCmd[1] + 3)) {
-            printf("Send Erase: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8EraseRespond)) {
-            printf("Read Erase: Fail\n");
-            return 1;
-        }
+
+    if (!writeAndReadBootloader(u8EraseCmd,u8Buff,u8EraseCmd[1] + 3,u8EraseRespond)){
+        printf("Erase: Fail\n");
+        return 1;
     }
 
 	/* Write */
@@ -587,29 +549,12 @@ int main(int argc, char const *argv[])
 		u8WriteCmd[3] = (uint8_t)u16Tmp;
 		u8WriteCmd[4] = (uint8_t)(u16Tmp >> 8);
         u16WrittenAddr = u16Tmp + u8WriteCmd[1] - 5;
-        if (usingSerial){
-            if (!WriteSerial(&serialFd, u8WriteCmd, u8WriteCmd[1] + 3)) {
-                printf("Send Write: Fail\n");
-                serial_close(&serialFd);
-                return 1;
-            }
-            
-            if (!ReadSerial(&serialFd, u8Buff, u8WriteRespond)) {
-                printf("Read Write: Fail\n");
-                serial_close(&serialFd);
-                return 1;
-            }
-        }else{
-            if (!Write(u8WriteCmd, u8WriteCmd[1] + 3)) {
-                printf("Send Write: Fail\n");
-                return 1;
-            }
-            
-            if (!Read(u8Buff, u8WriteRespond)) {
-                printf("Read Write: Fail\n");
-                return 1;
-            }
+
+        if (!writeAndReadBootloader(u8WriteCmd,u8Buff,u8WriteCmd[1] + 3,u8WriteRespond)){
+            printf("Write Flash: Fail\n");
+            return 1;
         }
+
 		ktProg.SetPos(i + 1);
 		ktProg.Display();
 	}
@@ -618,28 +563,10 @@ int main(int argc, char const *argv[])
         u8WriteCmd[1] = 0x05;
         u8WriteCmd[3] = (uint8_t)u16WrittenAddr;
         u8WriteCmd[4] = (uint8_t)(u16WrittenAddr >> 8);
-        if (usingSerial){
-            if (!WriteSerial(&serialFd, u8WriteCmd, u8WriteCmd[1] + 3)) {
-                printf("Send Write: Fail\n");
-                serial_close(&serialFd);
-                return 1;
-            }
-            
-            if (!ReadSerial(&serialFd, u8Buff, u8WriteRespond)) {
-                printf("Read Write: Fail\n");
-                serial_close(&serialFd);
-                return 1;
-            }
-        }else{
-            if (!Write(u8WriteCmd, u8WriteCmd[1] + 3)) {
-                printf("Send Write: Fail\n");
-                return 1;
-            }
-            
-            if (!Read(u8Buff, u8WriteRespond)) {
-                printf("Read Write: Fail\n");
-                return 1;
-            }
+
+        if (!writeAndReadBootloader(u8WriteCmd,u8Buff,u8WriteCmd[1] + 3,u8WriteRespond)){
+            printf("Write Flash: Fail\n");
+            return 1;
         }
     }
 
@@ -647,29 +574,10 @@ int main(int argc, char const *argv[])
 	printf("Write complete!!!\n");
 	printf("Verify chip\n");
 	
-	/* Set Flash Address to 0 */
-    if (usingSerial){
-        if (!WriteSerial(&serialFd, u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
-            printf("Send Address: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-        
-        if (!ReadSerial(&serialFd, u8Buff, u8NewBootkeyRespond)) {
-            printf("Read Address: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-    }else{
-        if (!Write(u8NewBootkeyCmd, u8NewBootkeyCmd[1] + 3)) {
-            printf("Send Address: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8NewBootkeyRespond)) {
-            printf("Read Address: Fail\n");
-            return 1;
-        }
+	/* New bootkey */
+    if (!writeAndReadBootloader(u8NewBootkeyCmd,u8Buff,u8NewBootkeyCmd[1] + 3,u8NewBootkeyRespond)){
+        printf("New bootkey: Fail\n");
+        return 1;
     }
 	
 	//just change A5 packet to A6
@@ -692,28 +600,9 @@ int main(int argc, char const *argv[])
 		u8VerifyCmd[3] = (uint8_t)u16Tmp;
 		u8VerifyCmd[4] = (uint8_t)(u16Tmp >> 8);
         
-        if (usingSerial){
-            if (!WriteSerial(&serialFd, u8VerifyCmd, u8VerifyCmd[1] + 3)) {
-                printf("Send Verify: Fail\n");
-                serial_close(&serialFd);
-                return 1;
-            }
-            
-            if (!ReadSerial(&serialFd, u8Buff, u8VerifyRespond)) {
-                printf("Read Verify: Fail\n");
-                serial_close(&serialFd);
-                return 1;
-            }
-        }else{
-            if (!Write(u8VerifyCmd, u8VerifyCmd[1] + 3)) {
-                printf("Send Verify: Fail\n");
-                return 1;
-            }
-            
-            if (!Read(u8Buff, u8VerifyRespond)) {
-                printf("Read Verify: Fail\n");
-                return 1;
-            }
+        if (!writeAndReadBootloader(u8VerifyCmd,u8Buff,u8VerifyCmd[1] + 3,u8VerifyRespond)){
+            printf("Verify Flash: Fail\n");
+            return 1;
         }
         
 		if (u8Buff[4]!=0 || u8Buff[5]!=0){
@@ -730,15 +619,10 @@ int main(int argc, char const *argv[])
 	printf("------------------------------------------------------------------\n");
 	
 	/* Reset and Run */
-    if (usingSerial){
-        WriteSerial(&serialFd, u8ResetCmd, u8ResetCmd[1] + 3);
-        ReadSerial(&serialFd, u8Buff, u8ResetRespond);
-    }else{
-        Write(u8ResetCmd, u8ResetCmd[1] + 3);
+    if (!writeAndReadBootloader(u8ResetCmd,usingSerial?u8Buff:NULL,u8ResetCmd[1] + 3,u8ResetRespond)){
+        printf("Reset: Fail\n");
+        return 1;
     }
-		//printf("Send Reset: Fail\n");
-		//return 1;
-	//}
 
     if (usingSerial){
         serial_close(&serialFd);
