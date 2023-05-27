@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Update apt-get
-      run: sudo apt-get updates
+      run: sudo apt-get update
     - name: Install libusb
       run: sudo apt-get install -y libusb-1.0-0-dev
     - name: make
