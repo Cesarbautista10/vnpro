@@ -91,7 +91,7 @@ uint8_t u8ReadCmd[64] = {
 };
 uint8_t u8ReadRespond = 6;
 
-libusb_device_handle *h = NULL;
+libusb_device_handle *usbHandle = NULL;
 
 uint32_t Write(uint8_t *p8Buff, uint8_t u8Length);
 uint32_t Read(uint8_t *p8Buff, uint8_t u8Length);
@@ -99,8 +99,10 @@ uint32_t Read(uint8_t *p8Buff, uint8_t u8Length);
 uint32_t Write(uint8_t *p8Buff, uint8_t u8Length)
 {
 	int len;
-	if (h){
-		if (libusb_bulk_transfer(h, 0x02, (unsigned char*)p8Buff, u8Length, &len, 5000) != 0) {
+	if (usbHandle){
+        int ret = libusb_bulk_transfer(usbHandle, 0x02, (unsigned char*)p8Buff, u8Length, &len, 5000);
+		if ( ret != 0) {
+            printf("Write libusb_bulk_transfer error code %d: %s\n",ret, libusb_strerror((enum libusb_error)ret));
 			return 0;
 		} else {
 			return 1;
@@ -136,8 +138,8 @@ uint32_t WriteSerial(union filedescriptor *fd, uint8_t *p8Buff, uint8_t u8Length
 uint32_t Read(uint8_t *p8Buff, uint8_t u8Length)
 {
 	int len;
-	if (h){
-		if (libusb_bulk_transfer(h, 0x82, (unsigned char*)p8Buff, u8Length, &len, 5000) != 0) {
+	if (usbHandle){
+		if (libusb_bulk_transfer(usbHandle, 0x82, (unsigned char*)p8Buff, u8Length, &len, 5000) != 0) {
 			return 0;
 		} else {
 			return 1;
@@ -289,17 +291,17 @@ int main(int argc, char const *argv[])
             }
     #endif
             if (libusbNeeded){
-                h = libusb_open_device_with_vid_pid(NULL, 0x4348, 0x55e0);
+                usbHandle = libusb_open_device_with_vid_pid(NULL, 0x4348, 0x55e0);
                 
-                if (h == NULL) {
+                if (usbHandle == NULL) {
                     //printf("Found no CH55x USB\n");
                 }else{
                     struct libusb_device_descriptor desc;
-                    if (libusb_get_device_descriptor(libusb_get_device(h), &desc) >= 0 ) {
+                    if (libusb_get_device_descriptor(libusb_get_device(usbHandle), &desc) >= 0 ) {
                         printf("DeviceVersion of CH55x: %d.%02d \n", ((desc.bcdDevice>>12)&0x0F)*10+((desc.bcdDevice>>8)&0x0F),((desc.bcdDevice>>4)&0x0F)*10+((desc.bcdDevice>>0)&0x0F));
                     }
                     
-                    libusb_claim_interface(h, 0);
+                    libusb_claim_interface(usbHandle, 0);
                     usbOpened = true;
                 }
             }
