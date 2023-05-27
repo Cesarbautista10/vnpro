@@ -92,6 +92,8 @@ uint8_t u8ReadCmd[64] = {
 uint8_t u8ReadRespond = 6;
 
 libusb_device_handle *usbHandle = NULL;
+bool usingSerial;
+union filedescriptor serialFd;
 
 uint32_t Write(uint8_t *p8Buff, uint8_t u8Length);
 uint32_t Read(uint8_t *p8Buff, uint8_t u8Length);
@@ -173,6 +175,32 @@ uint32_t ReadSerial(union filedescriptor *fd, uint8_t *p8Buff, uint8_t u8Length)
     return 1;
 }
 
+bool writeAndReadBootloader(uint8_t *writeBuf, uint8_t *readBuf, uint8_t writeLength, uint8_t readLength)
+{
+    if (usingSerial){
+        if (!WriteSerial(&serialFd,writeBuf,writeLength)){
+            printf("Send Detect: Fail\n");
+            serial_close(&serialFd);
+            return false;
+        }
+        if (!ReadSerial(&serialFd,readBuf,readLength)){
+            printf("Read Detect: Fail\n");
+            serial_close(&serialFd);
+            return false;
+        }
+    }else{
+        if (!Write(writeBuf,writeLength)){
+            printf("Send Detect: Fail\n");
+            return false;
+        }
+        if (!Read(readBuf,readLength)){
+            printf("Read Detect: Fail\n");
+            return false;
+        }
+    }
+    return true;
+}
+
 
 int main(int argc, char const *argv[])
 {
@@ -180,7 +208,6 @@ int main(int argc, char const *argv[])
 	KT_BinIO ktBin;
 	KT_ProgressBar ktProg;
 	uint8_t chipType;
-    bool usingSerial;
     int usbRertySeconds = 0;
 
 	printf("------------------------------------------------------------------\n");
@@ -196,7 +223,6 @@ int main(int argc, char const *argv[])
     char *fileName = NULL;
     usingSerial = false;
     char *serialName = NULL;
-    union filedescriptor serialFd;
     char *configBytesString = NULL;
 
     // use getopt to parse arguments, mac os doesn't support -
@@ -334,28 +360,9 @@ int main(int argc, char const *argv[])
     }
 	
 	/* Detect MCU */
-    if (usingSerial){
-        if (!WriteSerial(&serialFd, u8DetectCmd, u8DetectCmd[1] + 3)) {
-            printf("Send Detect: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-        
-        if (!ReadSerial(&serialFd, u8Buff, u8DetectRespond)) {
-            printf("Read Detect: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-    }else{
-        if (!Write(u8DetectCmd, u8DetectCmd[1] + 3)) {
-            printf("Send Detect: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8DetectRespond)) {
-            printf("Read Detect: Fail\n");
-            return 1;
-        }
+    if (!writeAndReadBootloader(u8DetectCmd,u8Buff,u8DetectCmd[1] + 3,u8DetectRespond)){
+        printf("Detect MCU: Fail\n");
+        return 1;
     }
 
 	/* Store refrence to MCU device ID */
@@ -387,28 +394,9 @@ int main(int argc, char const *argv[])
 	}
 
 	/* Bootloader and Chip ID */
-    if (usingSerial){
-        if (!WriteSerial(&serialFd, u8IdCmd, u8IdCmd[1] + 3)) {
-            printf("Send ID: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-        
-        if (!ReadSerial(&serialFd, u8Buff, u8IdRespond)) {
-            printf("Send ID: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-    }else{
-        if (!Write(u8IdCmd, u8IdCmd[1] + 3)) {
-            printf("Send ID: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8IdRespond)) {
-            printf("Read ID: Fail\n");
-            return 1;
-        }
+    if (!writeAndReadBootloader(u8IdCmd,u8Buff,u8IdCmd[1] + 3,u8IdRespond)){
+        printf("Read bootloader and ID: Fail\n");
+        return 1;
     }
     
 	printf("Bootloader: %d.%d.%d\n", u8Buff[19], u8Buff[20], u8Buff[21]);
@@ -444,62 +432,18 @@ int main(int argc, char const *argv[])
 		printf("%02X ", u8Mask[i]);
 	}
 	printf("\n");
-
-	/* Bootloader and Chip ID */
-    if (usingSerial){
-        if (!WriteSerial(&serialFd, u8IdCmd, u8IdCmd[1] + 3)) {
-            printf("Send ID: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-        
-        if (!ReadSerial(&serialFd, u8Buff, u8IdRespond)) {
-            printf("Read ID: Fail\n");
-            serial_close(&serialFd);
-            return 1;
-        }
-    }else{
-        if (!Write(u8IdCmd, u8IdCmd[1] + 3)) {
-            printf("Send ID: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8IdRespond)) {
-            printf("Read ID: Fail\n");
-            return 1;
-        }
-    }
     
     /* set configuration */
-    if (u8FamilyID == 0x11) {
+    if (u8FamilyID == 0x11) {   //ch551 ch552 ch554 ch558 ch559 
         if (configBytesString==NULL || (strcmp(configBytesString, "KEEP")!=0)){
-            if (usingSerial){
-                if (!WriteSerial(&serialFd, u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
-                    printf("Send Init: Fail\n");
-                    serial_close(&serialFd);
-                    return 1;
-                }
-                
-                if (!ReadSerial(&serialFd, u8Buff, u8WriteBootOptionsRespond)) {
-                    printf("Read Init: Fail\n");
-                    serial_close(&serialFd);
-                    return 1;
-                }
-            }else{
-                if (!Write(u8WriteBootOptionsCmd, u8WriteBootOptionsCmd[1] + 3)) {
-                    printf("Send Init: Fail\n");
-                    return 1;
-                }
-                
-                if (!Read(u8Buff, u8WriteBootOptionsRespond)) {
-                    printf("Read Init: Fail\n");
-                    return 1;
-                }
+            if (!writeAndReadBootloader(u8WriteBootOptionsCmd,u8Buff,u8WriteBootOptionsCmd[1] + 3,u8WriteBootOptionsRespond)){
+                printf("Set configuration: Fail\n");
+                return 1;
             }
         }else{
             printf("Skip boot config write.\n");
         }
-    }else if (u8FamilyID == 0x12) {
+    }else if (u8FamilyID == 0x12) { //ch549
         /* Read Boot Option */
         uint8_t u8ReadOptionCmd[64] = {
             0xA7, 0x02, 0x00, 0x1F, 0x00
@@ -512,14 +456,9 @@ int main(int argc, char const *argv[])
             0xa8, 0x0e, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0xd2, 0x00, 0x00
         };
         uint8_t u8WriteOptionRespond = 6;
-        //todo: add serial
-        if (!Write(u8ReadOptionCmd, u8ReadOptionCmd[1] + 3)) {
-            printf("Send Read Option: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8ReadOptionRespond)) {
-            printf("Read Read Option: Fail\n");
+
+        if (!writeAndReadBootloader(u8ReadOptionCmd,u8Buff,u8ReadOptionCmd[1] + 3,u8ReadOptionRespond)){
+            printf("Read Option Fail\n");
             return 1;
         }
         
@@ -529,26 +468,16 @@ int main(int argc, char const *argv[])
         }
         printf("\n");*/
         if (configBytesString==NULL || (strcmp(configBytesString, "KEEP")!=0)){
-            if (!Write(u8WriteOptionCmd, u8WriteOptionCmd[1] + 3)) {
-                printf("Send Write Option: Fail\n");
-                return 1;
-            }
-            
-            if (!Read(u8Buff, u8WriteOptionRespond)) {
-                printf("Read Write Option: Fail\n");
+            if (!writeAndReadBootloader(u8WriteOptionCmd,u8Buff,u8WriteOptionCmd[1] + 3,u8WriteOptionRespond)){
+                printf("Write Option Fail\n");
                 return 1;
             }
         }else{
             printf("Skip boot config write.\n");
         }
         
-        if (!Write(u8ReadOptionCmd, u8ReadOptionCmd[1] + 3)) {
-            printf("Send Read Option: Fail\n");
-            return 1;
-        }
-        
-        if (!Read(u8Buff, u8ReadOptionRespond)) {
-            printf("Read Read Option: Fail\n");
+        if (!writeAndReadBootloader(u8ReadOptionCmd,u8Buff,u8ReadOptionCmd[1] + 3,u8ReadOptionRespond)){
+            printf("Read Option Fail\n");
             return 1;
         }
         
