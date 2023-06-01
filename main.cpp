@@ -13,7 +13,7 @@ uint8_t usingCH375Driver = 0;
 HINSTANCE hDLL;
 #endif
 
-#define DATE_MESSAGE "Updated on: 2023/05/27\n"
+#define DATE_MESSAGE "Updated on: 2023/06/01\n"
 
 KT_BinIO ktFlash;
 
@@ -224,10 +224,11 @@ int main(int argc, char const *argv[])
     usingSerial = false;
     char *serialName = NULL;
     char *configBytesString = NULL;
+    char *targerString = NULL;
 
     // use getopt to parse arguments, mac os doesn't support -
     int opt;
-    while ((opt = getopt(argc, (char *const *)argv, "s:r:c:"))) {
+    while ((opt = getopt(argc, (char *const *)argv, "s:r:c:t:"))) {
         if (opt == -1)
             break;
         switch (opt) {
@@ -242,6 +243,17 @@ int main(int argc, char const *argv[])
                 break;
             case 'c':
                 configBytesString = optarg;
+                printf("config bytes: %s\n",configBytesString);
+                break;
+            case 't':
+                targerString = optarg;
+                //convert targerString to upper case
+                for (int i=0;i<strlen(targerString);i++){
+                    if (targerString[i]>='a' && targerString[i]<='z'){
+                        targerString[i] = targerString[i] - 'a' + 'A';
+                    }
+                }
+                printf("target: %s\n",targerString);
                 break;
         }
     }
@@ -385,6 +397,14 @@ int main(int argc, char const *argv[])
             return 1;
         }else{
             printf("Found Device CH5%x\n", u8DeviceID);
+            if (targerString!=NULL){
+                char detectedTarget[] = "CH55x";
+                detectedTarget[4] = (u8DeviceID&0x0F) + '0';
+                if (strcmp(targerString, detectedTarget)!=0){
+                    printf("Target in argument %s doesn't match detected target %s\n",targerString,detectedTarget);
+                    return 1;
+                }
+            }
         }
     }else if (u8FamilyID == 0x12) {
         //todo: check MCU ID
