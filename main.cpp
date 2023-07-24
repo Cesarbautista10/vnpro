@@ -242,8 +242,34 @@ int main(int argc, char const *argv[])
                 printf("usbRertySeconds %d\n",usbRertySeconds);
                 break;
             case 'c':
-                configBytesString = optarg;
-                printf("config bytes: %s\n",configBytesString);
+                {
+                    printf("config bytes: %s\n",optarg);
+                    //check if configBytesString is valid
+                    int configBytesStringLen = strlen(optarg);
+                    if (configBytesStringLen>0 && configBytesStringLen<=4){
+                        if (strcmp(optarg,"KEEP")==0){
+                            configBytesString = optarg; //special case
+                        }else{
+                            //check if each character is 0~9 or A~F or a~f
+                            bool valid = true;
+                            for (int i=0;i<configBytesStringLen;i++){
+                                if ( (optarg[i]>='0' && optarg[i]<='9') || (optarg[i]>='A' && optarg[i]<='F') || (optarg[i]>='a' && optarg[i]<='f') ){
+                                    //ok
+                                }else{
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                            if (valid){
+                                configBytesString = optarg;
+                            }
+                        }
+                        configBytesString = optarg;
+                    }
+                    if (configBytesString == NULL){
+                        printf("config bytes string is not valid, ignore\n");
+                    }
+                }
                 break;
             case 't':
                 targerString = optarg;
@@ -455,7 +481,14 @@ int main(int argc, char const *argv[])
     
     /* set configuration */
     if (u8FamilyID == 0x11) {   //ch551 ch552 ch554 ch558 ch559 
-        if (configBytesString==NULL || (strcmp(configBytesString, "KEEP")!=0)){
+        if (configBytesString==NULL || strcmp(configBytesString, "KEEP")!=0){
+            if (configBytesString!=NULL){
+                if (strlen(configBytesString)<=2){
+                    //change ROM_CFG_ADDR-4
+                    //for CH552, 0x03 will set bootpin to P3.6(D+), clear P1.5
+                    u8WriteBootOptionsCmd[9] = strtol(configBytesString,NULL,16);
+                }
+            }
             if (!writeAndReadBootloader(u8WriteBootOptionsCmd,u8Buff,u8WriteBootOptionsCmd[1] + 3,u8WriteBootOptionsRespond)){
                 printf("Set configuration: Fail\n");
                 return 1;
