@@ -511,6 +511,7 @@ int main(int argc, char const *argv[])
         
         //A8 set configuration, may be necessary for CH549
         /* Write Boot Option */
+        /* u8WriteOptionCmd[9] bit 1, Clear P5.1, Set P1.5*/
         uint8_t u8WriteOptionCmd[64] = {
             0xa8, 0x0e, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0xd2, 0x00, 0x00
         };
@@ -527,6 +528,12 @@ int main(int argc, char const *argv[])
         }
         printf("\n");*/
         if (configBytesString==NULL || (strcmp(configBytesString, "KEEP")!=0)){
+            if (configBytesString!=NULL){
+                if (strlen(configBytesString)<=2){
+                    //for CH549, 0x02 will set bootpin to P1.5, clear P5.1(D+)
+                    u8WriteOptionCmd[9] = strtol(configBytesString,NULL,16);
+                }
+            }
             if (!writeAndReadBootloader(u8WriteOptionCmd,u8Buff,u8WriteOptionCmd[1] + 3,u8WriteOptionRespond)){
                 printf("Write Option Fail\n");
                 return 1;
