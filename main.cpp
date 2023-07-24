@@ -639,7 +639,9 @@ int main(int argc, char const *argv[])
 	printf("------------------------------------------------------------------\n");
 	
 	/* Reset and Run */
-    if (!writeAndReadBootloader(u8ResetCmd,usingSerial?u8Buff:NULL,u8ResetCmd[1] + 3,u8ResetRespond)){
+    if (writeAndReadBootloader(u8ResetCmd,usingSerial?u8Buff:NULL,u8ResetCmd[1] + 3,u8ResetRespond)){
+        printf("Reset OK\n");
+    }else{
         printf("Reset: Fail\n");
         return 1;
     }
