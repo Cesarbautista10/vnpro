@@ -41,6 +41,9 @@ uint8_t u8FamilyID = 0;
 
 /* Write boot options. On ch552, write 8 bytes from u8WriteBootOptionsCmd[5] to ROM_CFG_ADDR-8 */
 /* ch552 only check ROM_CFG_ADDR-4 (written 0x03), bit 1, Set use P3.6 as boot. Clear P1.5. bit 0 related to timeout */
+/* for ch559, u8WriteBootOptionsCmd[14] is default to 0x4E*/
+/* for ch559, u8WriteBootOptionsCmd[5] bit 0, enable serial button free download. bit 1, Set to use P4.6 as boot, Clear P5.1*/
+
 uint8_t u8WriteBootOptionsCmd[64] = {
 	0xA8, 0x0E, 0x00, 0x07, 0x00, 0xFF, 0xFF, 0xFF,
 	0xFF, 0x03, 0x00, 0x00, 0x00, 0xFF, 0x52, 0x00,
@@ -481,6 +484,9 @@ int main(int argc, char const *argv[])
     
     /* set configuration */
     if (u8FamilyID == 0x11) {   //ch551 ch552 ch554 ch558 ch559 
+        if (u8DeviceID == 0x59){
+            u8WriteBootOptionsCmd[14]=0x4E;
+        }
         if (configBytesString==NULL || strcmp(configBytesString, "KEEP")!=0){
             if (configBytesString!=NULL){
                 if (strlen(configBytesString)<=2){
