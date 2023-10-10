@@ -13,7 +13,7 @@ uint8_t usingCH375Driver = 0;
 HINSTANCE hDLL;
 #endif
 
-#define DATE_MESSAGE "Updated on: 2023/10/09\n"
+#define DATE_MESSAGE "Updated on: 2023/10/10\n"
 
 KT_BinIO ktFlash;
 
@@ -71,7 +71,7 @@ uint8_t u8EraseRespond = 6;
 uint8_t u8ResetCmd[64] = {
 	0xA2, 0x01, 0x00, 0x01 /* if 0x00 not run, 0x01 run*/
 };
-uint8_t u8ResetRespond = 6;
+uint8_t u8ResetRespond = 4;
 
 /* Write, mask protected*/
 uint8_t u8WriteCmd[64] = {
