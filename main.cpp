@@ -13,7 +13,7 @@ uint8_t usingCH375Driver = 0;
 HINSTANCE hDLL;
 #endif
 
-#define DATE_MESSAGE "Updated on: 2023/07/24\n"
+#define DATE_MESSAGE "Updated on: 2023/10/09\n"
 
 KT_BinIO ktFlash;
 
