@@ -429,7 +429,23 @@ int main(int argc, char const *argv[])
             if (targerString!=NULL){
                 char detectedTarget[] = "CH55x";
                 detectedTarget[4] = (u8DeviceID&0x0F) + '0';
-                if (strcmp(targerString, detectedTarget)!=0){
+                bool compatible = true;
+                if (memcmp(targerString, detectedTarget, 4)!=0){
+                    compatible = false;
+                }
+                if (compatible){
+                    if (strcmp(targerString, detectedTarget)==0){
+                        //exactly same is ok
+                    }else if (targerString[4]=='1' && ((detectedTarget[4]=='2') || (detectedTarget[4]=='4'))){
+                        //ok
+                    }else if (targerString[4]=='2' && ((detectedTarget[4]=='4'))){
+                        //ok
+                    }else{
+                        compatible = false;
+                    }
+                }
+
+                if (!compatible){
                     printf("Target in argument %s doesn't match detected target %s\n",targerString,detectedTarget);
                     return 1;
                 }
