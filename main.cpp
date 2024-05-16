@@ -13,7 +13,7 @@ uint8_t usingCH375Driver = 0;
 HINSTANCE hDLL;
 #endif
 
-#define DATE_MESSAGE "Updated on: 2023/10/10\n"
+#define DATE_MESSAGE "Updated on: 2024/05/16\n"
 
 KT_BinIO ktFlash;
 
@@ -500,15 +500,21 @@ int main(int argc, char const *argv[])
     
     /* set configuration */
     if (u8FamilyID == 0x11) {   //ch551 ch552 ch554 ch558 ch559 
-        if (u8DeviceID == 0x59){
-            u8WriteBootOptionsCmd[14]=0x4E;
-        }
+
         if (configBytesString==NULL || strcmp(configBytesString, "KEEP")!=0){
             if (configBytesString!=NULL){
                 if (strlen(configBytesString)<=2){
-                    //change ROM_CFG_ADDR-4
-                    //for CH552, 0x03 will set bootpin to P3.6(D+), clear P1.5
-                    u8WriteBootOptionsCmd[9] = strtol(configBytesString,NULL,16);
+                    if ((u8DeviceID == 0x51) || (u8DeviceID == 0x52) || (u8DeviceID == 0x54)){
+                        //change ROM_CFG_ADDR-4
+                        //for CH552, 0x03 will set bootpin to P3.6(D+), clear P1.5
+                        u8WriteBootOptionsCmd[9] = strtol(configBytesString,NULL,16); //TODO: may need read back first
+                    }else if ((u8DeviceID == 0x58) || (u8DeviceID == 0x59)){
+                        u8WriteBootOptionsCmd[14] = strtol(configBytesString,NULL,16); //TODO: may need read back first
+                    }
+                }
+            }else{
+                if ((u8DeviceID == 0x58) || (u8DeviceID == 0x59)){
+                    u8WriteBootOptionsCmd[14]=0x4E; //TODO: may need read back first
                 }
             }
             if (!writeAndReadBootloader(u8WriteBootOptionsCmd,u8Buff,u8WriteBootOptionsCmd[1] + 3,u8WriteBootOptionsRespond)){
