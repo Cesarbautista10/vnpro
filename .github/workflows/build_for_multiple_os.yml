@@ -25,7 +25,6 @@ jobs:
         with:
           name: linux_build
           path: linux.tar.gz
-
   windows_build:
     runs-on: ubuntu-22.04
     steps:
@@ -38,12 +37,11 @@ jobs:
         run: |
           unzip -o libusb_mingw32.zip
           sudo cp usr_i686-w64-mingw32_lib/* /usr/i686-w64-mingw32/lib/
-          cp -r /usr/include/libusb-1.0 .  # para que INCLUDE=-I. funcione
           make clean
-          make OS_NAME=cygwin host=i686-w64-mingw32 INCLUDE=-I.
+          make OS_NAME=cygwin host=i686-w64-mingw32 INCLUDE=-I./include
           mkdir win
           cp vnproch55x.exe win/
-          cp *.dll win/
+          cp *.dll win/ || true  # por si no hay DLLs
       - uses: actions/upload-artifact@v4
         with:
           name: win_build
