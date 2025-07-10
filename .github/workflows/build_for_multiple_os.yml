@@ -21,7 +21,7 @@ jobs:
           mkdir linux
           cp vnproch55x linux/
           tar -czf linux.tar.gz linux
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux_build
           path: linux.tar.gz
@@ -44,7 +44,7 @@ jobs:
           mkdir win
           cp vnproch55x.exe win/
           cp *.dll win/
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: win_build
           path: win
@@ -66,7 +66,7 @@ jobs:
           mkdir linux_arm64
           cp vnproch55x linux_arm64/
           tar -czf linux_arm64.tar.gz linux_arm64
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux_arm64_build
           path: linux_arm64.tar.gz
@@ -88,7 +88,7 @@ jobs:
           mkdir mac
           cp vnproch55x mac/
           tar -czf mac.tar.gz mac
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: mac_build
           path: mac.tar.gz
