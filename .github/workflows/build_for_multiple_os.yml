@@ -25,6 +25,7 @@ jobs:
         with:
           name: linux_build
           path: linux.tar.gz
+
   windows_build:
     runs-on: ubuntu-22.04
     steps:
@@ -41,11 +42,13 @@ jobs:
           make OS_NAME=cygwin host=i686-w64-mingw32 INCLUDE=-I./include
           mkdir win
           cp vnproch55x.exe win/
-          cp *.dll win/ || true  # por si no hay DLLs
+          cp *.dll win/ || true
       - uses: actions/upload-artifact@v4
         with:
           name: win_build
           path: win
+     
+
 
   arm64_build:
     runs-on: ubuntu-22.04
