@@ -10,7 +10,7 @@ jobs:
   linux_build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install libusb
         run: |
           sudo apt-get update
@@ -29,7 +29,7 @@ jobs:
   windows_build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install MinGW and dependencies
         run: |
           sudo apt-get update
@@ -52,7 +52,7 @@ jobs:
   arm64_build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install ARM64 cross compiler
         run: |
           sudo apt-get update
@@ -74,7 +74,7 @@ jobs:
   mac_build:
     runs-on: macos-11
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Prepare libusb (simulado)
         run: |
           tar -xvf libusb_mac.tgz
