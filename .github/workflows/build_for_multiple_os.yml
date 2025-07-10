@@ -8,7 +8,7 @@ on:
 
 jobs:
   linux_build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Install libusb
@@ -27,7 +27,7 @@ jobs:
           path: linux.tar.gz
 
   windows_build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Install MinGW and dependencies
@@ -50,7 +50,7 @@ jobs:
           path: win
 
   arm64_build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Install ARM64 cross compiler
