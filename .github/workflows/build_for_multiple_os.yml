@@ -1,4 +1,4 @@
-name: Build for Multiple target
+name: Build for Multiple Targets
 
 on:
   push:
@@ -10,77 +10,85 @@ jobs:
   linux_build:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
-    - name: Update apt-get
-      run: sudo apt-get update
-    - name: Install libusb
-      run: sudo apt-get install -y libusb-1.0-0-dev
-    - name: make
-      run: make
-    - name: compress file to keep permissions 
-      run: |
-        mkdir linux
-        cp vnproch55x linux/
-        tar -cvf linux.tar linux
-    - uses: actions/upload-artifact@v3
-      with:
-        name: linux_build
-        path: linux.tar        
-        
-    - name: test win build
-      run: |
-        echo "need to build for windows"
-        sudo apt-get install -y g++-mingw-w64-i686
-        unzip -o libusb_mingw32.zip
-        sudo cp usr_i686-w64-mingw32_lib/* /usr/i686-w64-mingw32/lib/
-        cp -r /usr/include/libusb-1.0 .
-        make clean
-        make OS_NAME=cygwin host=i686-w64-mingw32 INCLUDE=-I.
-        mkdir win
-        cp vnproch55x.exe win/
-        cp *.dll win/
-    - uses: actions/upload-artifact@v3
-      with:
-        name: win_build
-        path: win        
+      - uses: actions/checkout@v3
+      - name: Install libusb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libusb-1.0-0-dev
+      - name: Build for Linux
+        run: |
+          make
+          mkdir linux
+          cp vnproch55x linux/
+          tar -czf linux.tar.gz linux
+      - uses: actions/upload-artifact@v3
+        with:
+          name: linux_build
+          path: linux.tar.gz
 
-    - name: build with aarch64-linux-gnu
-      run: |
-        echo "need to build for arm"
-        sudo apt-get install -y g++-aarch64-linux-gnu
-        unzip -o libusb_arm64.zip
-        sudo cp usr_lib_aarch64-linux-gnu/* /usr/lib/aarch64-linux-gnu/
-        make clean
-        make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
-        mkdir linux_arm64
-        cp vnproch55x linux_arm64/
-        tar -cvf linux_arm64.tar linux_arm64
-    - uses: actions/upload-artifact@v3
-      with:
-        name: linux_arm64_build
-        path: linux_arm64.tar    
-        
+  windows_build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install MinGW and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-mingw-w64-i686 unzip
+      - name: Prepare and build for Windows
+        run: |
+          unzip -o libusb_mingw32.zip
+          sudo cp usr_i686-w64-mingw32_lib/* /usr/i686-w64-mingw32/lib/
+          cp -r /usr/include/libusb-1.0 .
+          make clean
+          make OS_NAME=cygwin host=i686-w64-mingw32 INCLUDE=-I.
+          mkdir win
+          cp vnproch55x.exe win/
+          cp *.dll win/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: win_build
+          path: win
+
+  arm64_build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install ARM64 cross compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-aarch64-linux-gnu unzip
+      - name: Prepare and build for ARM64
+        run: |
+          unzip -o libusb_arm64.zip
+          sudo cp usr_lib_aarch64-linux-gnu/* /usr/lib/aarch64-linux-gnu/
+          make clean
+          make CPP=aarch64-linux-gnu-g++ host=aarch64-linux-gnu
+          mkdir linux_arm64
+          cp vnproch55x linux_arm64/
+          tar -czf linux_arm64.tar.gz linux_arm64
+      - uses: actions/upload-artifact@v3
+        with:
+          name: linux_arm64_build
+          path: linux_arm64.tar.gz
+
   mac_build:
     runs-on: macos-11
     steps:
-    - uses: actions/checkout@v3
-    - name: Install libusb
-      run: echo "skip for now"
-    - name: make
-      run: |
-        tar -xvf libusb_mac.tgz
-        mkdir -p /usr/local/Cellar/libusb/1.0.23/lib
-        mkdir -p /usr/local/Cellar/libusb-compat/0.1.5_1/lib
-        cp libusb-1.0.a /usr/local/Cellar/libusb/1.0.23/lib/
-        cp libusb.a /usr/local/Cellar/libusb-compat/0.1.5_1/lib/
-        make
-    - name: compress file to keep permissions 
-      run: |
-        mkdir mac
-        cp vnproch55x mac/
-        tar -cvf mac.tar mac
-    - uses: actions/upload-artifact@v3
-      with:
-        name: mac_build
-        path: mac.tar        
-
+      - uses: actions/checkout@v3
+      - name: Prepare libusb (simulado)
+        run: |
+          tar -xvf libusb_mac.tgz
+          sudo mkdir -p /usr/local/Cellar/libusb/1.0.23/lib
+          sudo mkdir -p /usr/local/Cellar/libusb-compat/0.1.5_1/lib
+          sudo cp libusb-1.0.a /usr/local/Cellar/libusb/1.0.23/lib/
+          sudo cp libusb.a /usr/local/Cellar/libusb-compat/0.1.5_1/lib/
+      - name: Build for macOS
+        run: |
+          make
+          mkdir mac
+          cp vnproch55x mac/
+          tar -czf mac.tar.gz mac
+      - uses: actions/upload-artifact@v3
+        with:
+          name: mac_build
+          path: mac.tar.gz
